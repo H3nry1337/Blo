@@ -118,7 +118,7 @@ fun HomeScreen(nav: NavHostController) {
         }
         item {
             Card(
-                onClick = { nav.navigate(Routes.drama(phraseDrama.id)) },
+                onClick = { nav.navigate(Routes.watch(phraseDrama.id)) },
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),

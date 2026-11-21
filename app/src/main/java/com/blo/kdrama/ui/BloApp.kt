@@ -28,15 +28,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.blo.kdrama.ui.components.LocalStore
-import com.blo.kdrama.ui.screens.DramaDetailScreen
+import com.blo.kdrama.ui.screens.CustomPlayerScreen
 import com.blo.kdrama.ui.screens.DramasScreen
 import com.blo.kdrama.ui.screens.HangulScreen
 import com.blo.kdrama.ui.screens.HomeScreen
 import com.blo.kdrama.ui.screens.LessonScreen
 import com.blo.kdrama.ui.screens.LevelScreen
-import com.blo.kdrama.ui.screens.PlayerScreen
 import com.blo.kdrama.ui.screens.ProfileScreen
 import com.blo.kdrama.ui.screens.ReviewScreen
+import com.blo.kdrama.ui.screens.WatchScreen
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
 
@@ -51,9 +51,8 @@ object Routes {
     fun level(id: String) = "level/$id"
     fun lesson(id: String) = "lesson/$id"
     fun levelTest(id: String) = "test/$id"
-    fun drama(id: String) = "drama/$id"
-    fun player(url: String, dramaId: String? = null) =
-        "player?url=${Uri.encode(url)}&drama=${dramaId ?: ""}"
+    fun watch(id: String) = "watch/$id"
+    fun play(source: String) = "play?src=${Uri.encode(source)}"
     const val HANGUL = "hangul"
 }
 
@@ -100,21 +99,11 @@ fun BloApp() {
             composable("test/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) {
                 LessonScreen(lessonId = null, levelTestId = it.arguments?.getString("id").orEmpty(), onDone = { nav.popBackStack() })
             }
-            composable("drama/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) {
-                DramaDetailScreen(it.arguments?.getString("id").orEmpty(), nav)
+            composable("watch/{id}", arguments = listOf(navArgument("id") { type = NavType.StringType })) {
+                WatchScreen(it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
             }
-            composable(
-                "player?url={url}&drama={drama}",
-                arguments = listOf(
-                    navArgument("url") { type = NavType.StringType; defaultValue = "" },
-                    navArgument("drama") { type = NavType.StringType; defaultValue = "" },
-                ),
-            ) {
-                PlayerScreen(
-                    url = it.arguments?.getString("url").orEmpty(),
-                    dramaId = it.arguments?.getString("drama").orEmpty(),
-                    onBack = { nav.popBackStack() },
-                )
+            composable("play?src={src}", arguments = listOf(navArgument("src") { type = NavType.StringType; defaultValue = "" })) {
+                CustomPlayerScreen(it.arguments?.getString("src").orEmpty(), onBack = { nav.popBackStack() })
             }
         }
     }

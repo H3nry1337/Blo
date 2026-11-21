@@ -15,6 +15,12 @@ import com.blo.kdrama.ui.components.LocalStore
 import com.blo.kdrama.ui.screens.*
 import com.blo.kdrama.ui.theme.BloTheme
 import org.junit.Rule
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistry
+import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.core.app.ActivityOptionsCompat
+
 import org.junit.Test
 
 class ScreensTest {
@@ -28,7 +34,7 @@ class ScreensTest {
         val speaker = Speaker(paparazzi.context)
         paparazzi.snapshot(name) {
             BloTheme {
-                CompositionLocalProvider(LocalStore provides store, LocalSpeaker provides speaker) {
+                CompositionLocalProvider(LocalStore provides store, LocalSpeaker provides speaker, LocalActivityResultRegistryOwner provides FakeRegistryOwner) {
                     Surface { content() }
                 }
             }
@@ -44,7 +50,8 @@ class ScreensTest {
     @Test fun lesson() = shot("lesson") { LessonScreen("l6_3", null) {} }
     @Test fun hangul() = shot("hangul") { HangulScreen {} }
     @Test fun dramas() = shot("dramas") { DramasScreen(rememberNavController()) }
-    @Test fun drama() = shot("drama") { DramaDetailScreen("dots", rememberNavController()) }
+    @Test fun dramasContinue() = shot("dramas_continue", { s -> s.savePosition("school2015", com.blo.kdrama.data.DramaData.drama("school2015")!!.episodes[2].videoId, 1500, 3500) }) { DramasScreen(rememberNavController()) }
+    @Test fun watch() = run { com.blo.kdrama.ui.player.PlayerEnvironment.placeholderOnly = true }.let { shot("watch", { s -> s.savePosition("school2015", com.blo.kdrama.data.DramaData.drama("school2015")!!.episodes[0].videoId, 3500, 3559) }) { WatchScreen("school2015") {} } }
     @Test fun review() = shot("review", { s -> s.addCards(CourseData.lesson("l6_2")!!.words, "Эмоции") }) { ReviewScreen(null) }
     @Test fun profile() = shot("profile", { s -> s.completeLesson(CourseData.lesson("l1_1")!!, 8, 8) }) { ProfileScreen() }
 }
@@ -58,10 +65,16 @@ class ScreensDarkTest {
         val speaker = Speaker(paparazzi.context)
         paparazzi.snapshot("dramas_dark") {
             BloTheme {
-                CompositionLocalProvider(LocalStore provides store, LocalSpeaker provides speaker) {
-                    Surface { DramaDetailScreen("moonlight", rememberNavController()) }
+                CompositionLocalProvider(LocalStore provides store, LocalSpeaker provides speaker, LocalActivityResultRegistryOwner provides FakeRegistryOwner) {
+                    Surface { DramasScreen(rememberNavController()) }
                 }
             }
         }
+    }
+}
+
+object FakeRegistryOwner : ActivityResultRegistryOwner {
+    override val activityResultRegistry = object : ActivityResultRegistry() {
+        override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>, input: I, options: ActivityOptionsCompat?) {}
     }
 }

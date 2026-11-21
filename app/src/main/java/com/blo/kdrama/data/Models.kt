@@ -34,7 +34,19 @@ data class Level(
     val lessons: List<Lesson>,
 )
 
-data class Source(val name: String, val url: String, val note: String)
+/** Серия (или часть серии) — одно видео на официальном канале. */
+data class Episode(
+    val number: Int,
+    val part: Int,
+    val videoId: String,
+    val seconds: Int,
+    val title: String? = null,
+) {
+    val label: String get() = if (part > 0) "$number-$part" else "$number"
+    val thumbnail: String get() = "https://i.ytimg.com/vi/$videoId/mqdefault.jpg"
+    val duration: String get() = if (seconds >= 3600) "%d:%02d:%02d".format(seconds / 3600, seconds / 60 % 60, seconds % 60)
+        else "%d:%02d".format(seconds / 60, seconds % 60)
+}
 
 data class Drama(
     val id: String,
@@ -49,8 +61,11 @@ data class Drama(
     val description: String,
     val learn: String,
     val phrases: List<Word>,
-    val onKbsWorld: Boolean = false,
-)
+) {
+    val episodes: List<Episode> get() = EpisodeData.forDrama(id)
+    val episodeCount: Int get() = episodes.map { it.number }.distinct().size
+    val cover: String get() = episodes.firstOrNull()?.let { "https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg" }.orEmpty()
+}
 
 fun w(ko: String, rom: String, ru: String, say: String = ko) = Word(ko, rom, ru, say)
 fun ex(ko: String, ru: String) = Example(ko, ru)

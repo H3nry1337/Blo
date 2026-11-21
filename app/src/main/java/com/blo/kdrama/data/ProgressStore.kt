@@ -42,6 +42,13 @@ class ProgressStore(context: Context) {
     var favorites by mutableStateOf(prefs.getStringSet("favorites", emptySet())!!.toSet()); private set
     var cards by mutableStateOf(loadCards()); private set
 
+    // ── Просмотр ──
+    var positions by mutableStateOf(loadMap("positions")); private set
+    var watched by mutableStateOf(prefs.getStringSet("watched", emptySet())!!.toSet()); private set
+    var lastVideo by mutableStateOf(loadMap("lastVideo").mapValues { it.value.toString() }); private set
+    var lastDrama by mutableStateOf(prefs.getString("lastDrama", null)); private set
+    private var watchAccumulator = prefs.getInt("watchAcc", 0)
+
     var showRomanization by mutableStateOf(prefs.getBoolean("showRom", true))
         private set
     var speechRate by mutableFloatStateOf(prefs.getFloat("speechRate", 0.85f))
@@ -129,6 +136,46 @@ class ProgressStore(context: Context) {
         if (rating != Rating.AGAIN) addXp(1)
     }
 
+    fun positionOf(videoId: String): Int = (positions[videoId] as? Number)?.toInt() ?: 0
+
+    /** Сохраняет позицию просмотра; серия считается просмотренной после 90%. */
+    fun savePosition(dramaId: String?, videoId: String, seconds: Int, duration: Int) {
+        if (seconds <= 0) return
+        positions = positions + (videoId to seconds)
+        prefs.edit().putString("positions", JSONObject(positions).toString()).apply()
+        if (duration > 0 && seconds >= duration * 0.9 && videoId !in watched) {
+            watched = watched + videoId
+            prefs.edit().putStringSet("watched", watched).apply()
+            addXp(15)
+        }
+        if (dramaId != null && dramaId.isNotEmpty()) setLastVideo(dramaId, videoId)
+    }
+
+    fun setLastVideo(dramaId: String, videoId: String) {
+        if (lastVideo[dramaId] == videoId && lastDrama == dramaId) return
+        lastVideo = lastVideo + (dramaId to videoId)
+        lastDrama = dramaId
+        prefs.edit().putString("lastVideo", JSONObject(lastVideo).toString()).putString("lastDrama", dramaId).apply()
+    }
+
+    fun isWatched(videoId: String) = videoId in watched
+
+    /** Каждые 5 минут просмотра дают немного опыта — дорамы тоже учёба. */
+    fun addWatchTime(seconds: Int) {
+        if (seconds <= 0 || seconds > 30) return
+        watchAccumulator += seconds
+        if (watchAccumulator >= 300) {
+            watchAccumulator -= 300
+            addXp(3)
+        }
+        prefs.edit().putInt("watchAcc", watchAccumulator).apply()
+    }
+
+    private fun loadMap(key: String): Map<String, Any> = runCatching {
+        val o = JSONObject(prefs.getString(key, "{}")!!)
+        o.keys().asSequence().associateWith { o.get(it) }
+    }.getOrDefault(emptyMap())
+
     /** Слово считается выученным, если интервал повторения ≥ 7 дней. */
     val masteredCount: Int get() = cards.count { it.interval >= 7 }
 
@@ -141,6 +188,7 @@ class ProgressStore(context: Context) {
         prefs.edit().clear().apply()
         xp = 0; streak = 0; lastActiveDay = -1; todayXp = 0
         completedLessons = emptySet(); favorites = emptySet(); cards = emptyList()
+        positions = emptyMap(); watched = emptySet(); lastVideo = emptyMap(); lastDrama = null; watchAccumulator = 0
         showRomanization = true; speechRate = 0.85f; dailyGoal = 50
     }
 
