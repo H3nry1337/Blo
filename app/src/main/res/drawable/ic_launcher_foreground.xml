@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Экран -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,36h48a6,6 0,0 1,6 6v26a6,6 0,0 1,-6 6H30a6,6 0,0 1,-6 -6V42a6,6 0,0 1,6 -6z" />
+    <!-- Кнопка play -->
+    <path
+        android:fillColor="#E0457B"
+        android:pathData="M48,45L63,55L48,65Z" />
+    <!-- Сердечко -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,86c-1,-1 -9,-6 -9,-11a4.5,4.5 0,0 1,9 -1a4.5,4.5 0,0 1,9 1c0,5 -8,10 -9,11z" />
+</vector>
